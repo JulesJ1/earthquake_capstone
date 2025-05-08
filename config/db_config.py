@@ -2,6 +2,7 @@ import os
 import logging
 from utils.logging_utils import setup_logger
 from typing import Dict
+from dotenv import load_dotenv
 
 
 class DatabaseConfigError(Exception):
@@ -10,7 +11,7 @@ class DatabaseConfigError(Exception):
 
 # Configure the logger
 logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
-
+load_dotenv('../.env.dev')
 
 def load_db_config() -> Dict[str, Dict[str, str]]:
     """

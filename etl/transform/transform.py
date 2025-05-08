@@ -12,7 +12,6 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     ]
     earthquakes = earthquakes.drop(columns=columns)
     earthquakes = earthquakes.dropna(subset=['properties.mag'])
-    earthquakes['depth'] = earthquakes['depth'].fillna(10)
 
     names = {
         'properties.type': 'type',
@@ -22,10 +21,11 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     }
     earthquakes = earthquakes.rename(columns=names)
 
-    earthquakes['properties.time'] = pd.to_datetime(earthquakes['properties.time'], unit='ms').dt.floor('S')
+    earthquakes['time'] = pd.to_datetime(earthquakes['time'], unit='ms').dt.floor('s')
 
     earthquake_coordinates = earthquakes['geometry.coordinates'].apply(pd.Series).round(2)
     earthquake_coordinates.columns = ['longitude', 'latitude', 'depth']
+    earthquake_coordinates['depth'] = earthquake_coordinates['depth'].fillna(10)
 
     earthquakes.drop(columns=['geometry.coordinates'], inplace=True)
     earthquakes = pd.merge(earthquakes, earthquake_coordinates, left_index=True, right_index=True)
@@ -33,6 +33,8 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     earthquakes['nearestCity'] = earthquakes['location'].apply(nearest_city)
 
     earthquakes['location'] = earthquakes['location'].apply(lambda x: x.split(',')[-1])
+
+    return earthquakes
 
 
 def nearest_city(location: str) -> str:
