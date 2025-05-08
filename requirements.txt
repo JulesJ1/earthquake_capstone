@@ -9,7 +9,6 @@ coverage==7.8.0
 debugpy==1.8.14
 decorator==5.2.1
 diff_cover==9.2.4
--e git+https://github.com/JulesJ1/earthquake_capstone.git@3588f9424eb09aadfb2f3c9066e366b57673e647#egg=etl_example
 executing==2.2.0
 flake8==7.2.0
 greenlet==3.2.1
