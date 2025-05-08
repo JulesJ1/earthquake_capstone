@@ -21,7 +21,7 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     }
     earthquakes = earthquakes.rename(columns=names)
 
-    earthquakes['time'] = pd.to_datetime(earthquakes['time'], unit='ms').dt.floor('s')
+    earthquakes['time'] = pd.to_datetime(earthquakes['time'], unit='ms').dt.floor('s').dt.strftime('%Y-%m-%d %H:%M:%S')
 
     earthquake_coordinates = earthquakes['geometry.coordinates'].apply(pd.Series).round(2)
     earthquake_coordinates.columns = ['longitude', 'latitude', 'depth']
