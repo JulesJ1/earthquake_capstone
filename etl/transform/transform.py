@@ -1,5 +1,8 @@
 import pandas as pd
+import logging
+from utils.logging_utils import setup_logger
 
+logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
 
 def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     standardised_locations = {
@@ -49,6 +52,9 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
 
     earthquakes['location'] = earthquakes['location'].apply(lambda x: x.split(',')[-1])
     earthquakes['location'] = earthquakes['location'].str.strip().replace(standardised_locations)
+
+    logger.setLevel(logging.INFO)
+    logger.info("Successfully transformed data")
 
     return earthquakes
 

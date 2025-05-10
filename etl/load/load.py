@@ -25,13 +25,21 @@ def load_data(data: pd.DataFrame):
 def create_connection(connection_details: dict):
     try:
         engine = create_engine(f'postgresql://{connection_details['user']}:{connection_details['password']}@{connection_details['host']}:{connection_details['port']}/{connection_details['dbname']}')
+        logger.setLevel(logging.INFO)
+        logger.info("Successfully connected to the database")
         return engine
     except OperationalError as e:
-        print(f'Cannot connect: {e}')
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Operational error: {e}")
+        print(f'Operational error: {e}')
     except DatabaseError as e:
-        print(f'DatabaseError: {e}')
+        logger.setLevel(logging.ERROR)
+        logger.error(f"DatabaseError: {e}")
+        print(f'Database error: {e}')
     except SQLAlchemyError as e:
-        print(f'Could not conncet: {e}')
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Could not conncet to the database: {e}")
+        print(f'Could not conncet to the database: {e}')
 
 
 def table_exists(engine, metadata) -> bool:
@@ -42,7 +50,6 @@ def table_exists(engine, metadata) -> bool:
 
 def create_table(engine, metadata):
     try:
-        print('creating new table')
         Table(
             TABLE_NAME,
             metadata,
@@ -58,25 +65,39 @@ def create_table(engine, metadata):
             )
 
         metadata.create_all(engine)
+        logger.setLevel(logging.INFO)
+        logger.info(f"Successfully created table: {TABLE_NAME}")
+        
     except OperationalError as e:
-        print(f'Table already exists: {e}')
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Operational error, table already exists: {e}")
+        print(f'Operational error, table already exists: {e}')
     except InvalidRequestError as e:
-        print(f'Table already exists: {e}')
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Invalid request: {e}")
+        print(f'Invalid request: {e}')
 
 
 def insert_data(data: pd.DataFrame, engine):
     try:
         current_table = pd.read_sql_table('earthquakes', con=engine)
         data = data[~data['id'].isin(current_table['id'])]
-        print(data)
         data.to_sql(TABLE_NAME, engine, if_exists='append', index=False)
+        logger.setLevel(logging.INFO)
+        logger.info(f"Successfully inserted data into {TABLE_NAME} table")
 
     except IntegrityError as e:
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Unique violation error, duplicate primary keys in data: {e}")
         print(f'Unique violation error, duplicate primary keys in data: {e}')
 
     except DataError as e:
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Data error: {e}")
         print(F'Data error: {e}')
 
     except SQLAlchemyError as e:
-        print(f'{e}')
+        logger.setLevel(logging.ERROR)
+        logger.error(f"SQLAlchemy error: {e}")
+        print(f'SQLAlchemy error: {e}')
 

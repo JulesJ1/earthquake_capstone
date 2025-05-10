@@ -25,7 +25,7 @@ def extract_api(starttime, endttime):
         data.raise_for_status()
         df = pd.json_normalize(data.json(), 'features')
         logger.setLevel(logging.INFO)
-        logger.error("Successfully extracted data")
+        logger.info("Successfully extracted data")
         return df
     except requests.exceptions.HTTPError as e:
         logger.setLevel(logging.ERROR)
@@ -36,4 +36,6 @@ def extract_api(starttime, endttime):
         logger.error(f"Timeout error when extracting data: {e}")
         raise RequestTimeoutError(f'Timed out: {e}')
     except Exception as e:
+        logger.setLevel(logging.ERROR)
+        logger.error(f"unable to retrieve data: {e}")
         raise GeneralException(f'unable to retrieve data: {e}')
