@@ -1,8 +1,9 @@
-import pandas as pd
 import logging
+import pandas as pd
 from utils.logging_utils import setup_logger
 
 logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
+
 
 def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     standardised_locations = {
@@ -32,16 +33,18 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     }
     earthquakes = earthquakes.rename(columns=names)
 
-    earthquakes['time'] = pd.to_datetime(earthquakes['time'], unit='ms').dt.floor('s').dt.strftime('%Y-%m-%d %H:%M:%S')
+    earthquakes['time'] = pd.to_datetime(
+                            earthquakes['time'],
+                            unit='ms'
+                        ).dt.floor('s').dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    earthquake_coordinates = earthquakes['geometry.coordinates'].apply(pd.Series).round(2)
-    earthquake_coordinates.columns = ['longitude', 'latitude', 'depth']
-    
+    coordinates = earthquakes['geometry.coordinates'].apply(pd.Series).round(2)
+    coordinates.columns = ['longitude', 'latitude', 'depth']
 
     earthquakes.drop(columns=['geometry.coordinates'], inplace=True)
     earthquakes = pd.merge(
                     earthquakes, 
-                    earthquake_coordinates, 
+                    coordinates, 
                     left_index=True, 
                     right_index=True
                 )
@@ -62,5 +65,5 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
 def closest_location(location: str) -> str:
     if ',' in location:
         return location.split(',')[0]
-    
+
     return 'None'

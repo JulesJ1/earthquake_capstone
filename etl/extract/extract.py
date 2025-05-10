@@ -3,6 +3,7 @@ import requests
 import logging
 from utils.logging_utils import setup_logger
 
+
 class BadRequestError(Exception):
     pass
 
@@ -20,7 +21,9 @@ logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
 
 def extract_api(starttime, endttime):
     try:
-        query = f'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime={starttime}&endtime={endttime}'
+        query = 'https://earthquake.usgs.gov/fdsnws/event/1/query'\
+            f'?format=geojson&starttime={starttime}&endtime={endttime}'
+
         data = requests.get(query, timeout=60)
         data.raise_for_status()
         df = pd.json_normalize(data.json(), 'features')

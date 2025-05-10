@@ -1,13 +1,13 @@
 import pandas as pd
-from sqlalchemy import create_engine, MetaData, Table, Column, VARCHAR, INT, DateTime
-from sqlalchemy.exc import InvalidRequestError,OperationalError, IntegrityError, SQLAlchemyError, DataError, DatabaseError
+from sqlalchemy import create_engine, MetaData, Table, Column, VARCHAR, INT, DateTime, NUMERIC
+from sqlalchemy.exc import InvalidRequestError, OperationalError, IntegrityError, SQLAlchemyError, DataError, DatabaseError
 from utils.logging_utils import setup_logger
 import logging
 from config.db_config import load_db_config
 from psycopg2.errors import UniqueViolation
 
 logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
-TABLE_NAME = 'earthquakes'
+TABLE_NAME = 'test_types'
 
 
 def load_data(data: pd.DataFrame):
@@ -24,7 +24,13 @@ def load_data(data: pd.DataFrame):
 
 def create_connection(connection_details: dict):
     try:
-        engine = create_engine(f'postgresql://{connection_details['user']}:{connection_details['password']}@{connection_details['host']}:{connection_details['port']}/{connection_details['dbname']}')
+        engine = create_engine(
+                f'postgresql://{connection_details['user']}:'
+                f'{connection_details['password']}@'
+                f'{connection_details['host']}:'
+                f'{connection_details['port']}/'
+                f'{connection_details['dbname']}'
+            )
         logger.setLevel(logging.INFO)
         logger.info("Successfully connected to the database")
         return engine
@@ -54,20 +60,20 @@ def create_table(engine, metadata):
             TABLE_NAME,
             metadata,
             Column('id', VARCHAR(20), primary_key=True),
-            Column('magnitude', INT),
+            Column('magnitude', NUMERIC),
             Column('location', VARCHAR(70)),
             Column('time', DateTime),
             Column('type', VARCHAR(30)),
-            Column('longitude', INT),
-            Column('latitude', INT),
-            Column('depth', INT),
+            Column('longitude', NUMERIC),
+            Column('latitude', NUMERIC),
+            Column('depth', NUMERIC),
             Column('closestLocation', VARCHAR(70))
             )
 
         metadata.create_all(engine)
         logger.setLevel(logging.INFO)
         logger.info(f"Successfully created table: {TABLE_NAME}")
-        
+
     except OperationalError as e:
         logger.setLevel(logging.ERROR)
         logger.error(f"Operational error, table already exists: {e}")
@@ -80,7 +86,7 @@ def create_table(engine, metadata):
 
 def insert_data(data: pd.DataFrame, engine):
     try:
-        current_table = pd.read_sql_table('earthquakes', con=engine)
+        current_table = pd.read_sql_table(TABLE_NAME, con=engine)
         data = data[~data['id'].isin(current_table['id'])]
         data.to_sql(TABLE_NAME, engine, if_exists='append', index=False)
         logger.setLevel(logging.INFO)
@@ -100,4 +106,3 @@ def insert_data(data: pd.DataFrame, engine):
         logger.setLevel(logging.ERROR)
         logger.error(f"SQLAlchemy error: {e}")
         print(f'SQLAlchemy error: {e}')
-

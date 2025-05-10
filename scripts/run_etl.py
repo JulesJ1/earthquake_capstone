@@ -7,11 +7,28 @@ from etl.load.load import load_data
 from datetime import datetime, timezone, timedelta
 import schedule
 import subprocess
+import time
+
+TIME_LENGTH = 10
 
 
 def main():
     run_env_setup()
 
+    print('Strarting pipeline')
+
+    try:
+        run_pipeline()
+        print(f'Pipeline will run every {TIME_LENGTH} minutes')
+        base_path = os.path.dirname(__file__)
+        path = os.path.join(base_path, '../scripts/run_etl.py')
+        subprocess.run([sys.executable, path, 'dev'], check=True)
+
+    except subprocess.CalledProcessError as e:
+        print(f'Failed to run pipeline: {e}')
+
+
+def run_pipeline():
     endtime = datetime.now(timezone.utc)
     starttime = (endtime - timedelta(hours=8)).strftime('%Y-%m-%dT%H:%M:%S')
     endtime = endtime.strftime('%Y-%m-%dT%H:%M:%S')
@@ -31,6 +48,9 @@ def main():
     )
 
 
+schedule.every(TIME_LENGTH).minutes.do(main)
+
+
 def run_env_setup():
     print("Setting up environment...")
     setup_env(sys.argv)
@@ -38,6 +58,7 @@ def run_env_setup():
 
 
 if __name__ == "__main__":
-    user = input()
-    print('here')
-    main()
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

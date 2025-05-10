@@ -11,7 +11,9 @@ class DatabaseConfigError(Exception):
 
 # Configure the logger
 logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
-load_dotenv('../.env.dev')
+#load_dotenv('../.env.dev')
+load_dotenv('..')
+
 
 def load_db_config() -> Dict[str, Dict[str, str]]:
     """
