@@ -45,18 +45,15 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     
     earthquakes['depth'] = earthquakes['depth'].fillna(10)
 
-    earthquakes['nearestCity'] = earthquakes['location'].apply(nearest_city)
+    earthquakes['closestLocation'] = earthquakes['location'].apply(closest_location)
 
     earthquakes['location'] = earthquakes['location'].apply(lambda x: x.split(',')[-1])
-    earthquakes['location'] = earthquakes['location'].replace(standardised_locations)
+    earthquakes['location'] = earthquakes['location'].str.strip().replace(standardised_locations)
 
     return earthquakes
 
 
-    return earthquakes
-
-
-def nearest_city(location: str) -> str:
+def closest_location(location: str) -> str:
     if ',' in location:
         return location.split(',')[0]
     

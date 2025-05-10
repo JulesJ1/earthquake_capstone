@@ -12,7 +12,7 @@ def test_extract_success(mocker):
     # Act
     extract_api(teststarttime, testendtime)
     # Assert
-    mock_requests.assert_called_once_with(query, timeout=5)
+    mock_requests.assert_called_once_with(query, timeout=60)
     mock_requests = mocker.patch('etl.extract.extract.requests.get')
 
 

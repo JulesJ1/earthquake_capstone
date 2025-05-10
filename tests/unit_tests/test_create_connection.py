@@ -1,9 +1,8 @@
-import pytest
 from etl.load.load import create_connection
-
+import sqlalchemy
 
 def test_create_connection(mocker):
-    mock_engine = mocker.patch('etl.load.load.sqlalchemy.create_engine')
+    mock_engine = mocker.patch('etl.load.load.create_engine')
 
     test_details = {
         'TARGET_DB_NAME': 'test_target_db',
@@ -19,3 +18,4 @@ def test_create_connection(mocker):
 
 
 def test_insert_data(mocker):
+    pass
