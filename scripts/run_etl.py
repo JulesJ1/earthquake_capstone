@@ -9,7 +9,7 @@ import schedule
 import subprocess
 import time
 
-TIME_LENGTH = 10
+TIME_LENGTH = 30
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
 
 def run_pipeline():
     endtime = datetime.now(timezone.utc)
-    starttime = (endtime - timedelta(hours=8)).strftime('%Y-%m-%dT%H:%M:%S')
+    starttime = (endtime - timedelta(hours=TIME_LENGTH/60)).strftime('%Y-%m-%dT%H:%M:%S')
     endtime = endtime.strftime('%Y-%m-%dT%H:%M:%S')
 
     data = extract_api(starttime, endtime)

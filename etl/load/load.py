@@ -1,13 +1,14 @@
 import pandas as pd
-from sqlalchemy import create_engine, MetaData, Table, Column, VARCHAR, INT, DateTime, NUMERIC
+from sqlalchemy import create_engine, MetaData, Table, Column, VARCHAR, DateTime, NUMERIC, schema
 from sqlalchemy.exc import InvalidRequestError, OperationalError, IntegrityError, SQLAlchemyError, DataError, DatabaseError
 from utils.logging_utils import setup_logger
 import logging
 from config.db_config import load_db_config
-from psycopg2.errors import UniqueViolation
+
 
 logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
-TABLE_NAME = 'test_types'
+TABLE_NAME = 'jj_capstone'
+SCHEMA_NAME = 'c12de'
 
 
 def load_data(data: pd.DataFrame):
@@ -49,9 +50,10 @@ def create_connection(connection_details: dict):
 
 
 def table_exists(engine, metadata) -> bool:
-    metadata.reflect(bind=engine)
-    my_table = metadata.tables
-    return TABLE_NAME in my_table
+    metadata.clear()
+    metadata.reflect(bind=engine, schema=SCHEMA_NAME)
+    my_table = metadata.tables.keys()
+    return SCHEMA_NAME+'.'+TABLE_NAME in my_table
 
 
 def create_table(engine, metadata):
@@ -67,7 +69,8 @@ def create_table(engine, metadata):
             Column('longitude', NUMERIC),
             Column('latitude', NUMERIC),
             Column('depth', NUMERIC),
-            Column('closestLocation', VARCHAR(70))
+            Column('closestLocation', VARCHAR(70)),
+            schema=SCHEMA_NAME
             )
 
         metadata.create_all(engine)
@@ -86,11 +89,12 @@ def create_table(engine, metadata):
 
 def insert_data(data: pd.DataFrame, engine):
     try:
-        current_table = pd.read_sql_table(TABLE_NAME, con=engine)
+        current_table = pd.read_sql_table(TABLE_NAME, con=engine, schema=SCHEMA_NAME)
         data = data[~data['id'].isin(current_table['id'])]
-        data.to_sql(TABLE_NAME, engine, if_exists='append', index=False)
+        number_of_records = data.shape[0]
+        data.to_sql(TABLE_NAME, engine, if_exists='append', index=False, schema=SCHEMA_NAME)
         logger.setLevel(logging.INFO)
-        logger.info(f"Successfully inserted data into {TABLE_NAME} table")
+        logger.info(f"Successfully inserted {number_of_records} row(s) of data into {TABLE_NAME} table")
 
     except IntegrityError as e:
         logger.setLevel(logging.ERROR)
