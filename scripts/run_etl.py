@@ -22,7 +22,7 @@ def main():
         print(f'Pipeline will run every {TIME_LENGTH} minutes')
         base_path = os.path.dirname(__file__)
         path = os.path.join(base_path, '../scripts/run_etl.py')
-        subprocess.run([sys.executable, path, 'dev'], check=True)
+        subprocess.run([sys.executable, path, os.environ['ENV']], check=True)
 
     except subprocess.CalledProcessError as e:
         print(f'Failed to run pipeline: {e}')
@@ -34,6 +34,7 @@ def run_pipeline():
     endtime = endtime.strftime('%Y-%m-%dT%H:%M:%S')
 
     data = extract_api(starttime, endtime)
+    
     print('Extracted successfully')
 
     data = clean_earthquake_data(data)

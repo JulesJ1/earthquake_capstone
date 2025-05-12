@@ -9,13 +9,14 @@ from config.db_config import load_db_config
 logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
 TABLE_NAME = 'jj_capstone'
 SCHEMA_NAME = 'c12de'
-
+#TABLE_NAME = 'test_types_3'
+#SCHEMA_NAME = 'test'
 
 def load_data(data: pd.DataFrame):
     db_details = load_db_config()['target_database']
     meta = MetaData()
-
-    engine = create_connection(db_details)
+    
+    engine = create_db_engine(db_details)
 
     if not table_exists(engine, meta):
         create_table(engine, meta)
@@ -23,7 +24,7 @@ def load_data(data: pd.DataFrame):
     insert_data(data, engine)
 
 
-def create_connection(connection_details: dict):
+def create_db_engine(connection_details: dict):
     try:
         engine = create_engine(
                 f'postgresql://{connection_details['user']}:'
@@ -50,7 +51,7 @@ def create_connection(connection_details: dict):
 
 
 def table_exists(engine, metadata) -> bool:
-    metadata.clear()
+    # metadata.clear()
     metadata.reflect(bind=engine, schema=SCHEMA_NAME)
     my_table = metadata.tables.keys()
     return SCHEMA_NAME+'.'+TABLE_NAME in my_table
