@@ -9,6 +9,7 @@ TEST_CONFIG = {
     "integration": {"dir": "tests/integration_tests", "cov": ["etl"]},
     "component": {"dir": "tests/component_tests", "cov": ["etl"]},
     "all": {"dir": "tests", "cov": ["config", "etl", "utils"]},
+    "streamlit": {"dir": "app", "cov": ["config", "utils", "etl"]},
 }
 
 
@@ -37,7 +38,8 @@ def report_results(py_result, sql_result):
         else:
             print(py_result.stdout)
     else:
-        print(f"Python linting failed with return code: " f"{py_result.returncode}")
+        print(f"Python linting failed with return code: "
+              f"{py_result.returncode}")
         print(py_result.stdout)
         print(py_result.stderr)
 

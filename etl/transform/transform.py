@@ -43,18 +43,25 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
 
     earthquakes.drop(columns=['geometry.coordinates'], inplace=True)
     earthquakes = pd.merge(
-                    earthquakes, 
-                    coordinates, 
-                    left_index=True, 
+                    earthquakes,
+                    coordinates,
+                    left_index=True,
                     right_index=True
                 )
-    
+
     earthquakes['depth'] = earthquakes['depth'].fillna(10)
 
-    earthquakes['closestLocation'] = earthquakes['location'].apply(closest_location)
+    earthquakes['closestLocation'] = earthquakes[
+        'location'
+        ].apply(closest_location)
 
-    earthquakes['location'] = earthquakes['location'].apply(lambda x: x.split(',')[-1])
-    earthquakes['location'] = earthquakes['location'].str.strip().replace(standardised_locations)
+    earthquakes['location'] = earthquakes[
+        'location'
+        ].apply(lambda x: x.split(',')[-1])
+
+    earthquakes['location'] = earthquakes[
+        'location'
+        ].str.strip().replace(standardised_locations)
 
     logger.setLevel(logging.INFO)
     logger.info("Successfully transformed data")

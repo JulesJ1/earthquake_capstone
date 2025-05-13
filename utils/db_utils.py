@@ -1,7 +1,12 @@
 import logging
 from sqlalchemy import create_engine
 from utils.logging_utils import setup_logger
-from sqlalchemy.exc import InvalidRequestError, OperationalError, IntegrityError, SQLAlchemyError, DataError, DatabaseError
+from sqlalchemy.exc import (  # InvalidRequestError,
+                            OperationalError,
+                            # IntegrityError,
+                            SQLAlchemyError,
+                            # DataError,
+                            DatabaseError)
 from datetime import datetime, timezone, timedelta
 
 logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
@@ -45,6 +50,8 @@ def create_connection(engine):
 
 def get_time(delta: int) -> list[str, str]:
     endtime = datetime.now(timezone.utc)
-    starttime = (endtime - timedelta(hours=delta)).strftime('%Y-%m-%dT%H:%M:%S')
+    starttime = (
+            endtime - timedelta(hours=delta)
+        ).strftime('%Y-%m-%dT%H:%M:%S')
     endtime = endtime.strftime('%Y-%m-%dT%H:%M:%S')
     return [starttime, endtime]

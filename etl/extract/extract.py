@@ -16,6 +16,10 @@ class GeneralException(Exception):
     pass
 
 
+class EmptyDataframeException(Exception):
+    pass
+
+
 logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
 
 
@@ -27,6 +31,9 @@ def extract_api(starttime, endttime):
         data = requests.get(query, timeout=60)
         data.raise_for_status()
         df = pd.json_normalize(data.json(), 'features')
+       
+        if len(df.columns) == 0:
+            raise EmptyDataframeException
         logger.setLevel(logging.INFO)
         logger.info("Successfully extracted data")
         return df
@@ -38,6 +45,8 @@ def extract_api(starttime, endttime):
         logger.setLevel(logging.ERROR)
         logger.error(f"Timeout error when extracting data: {e}")
         raise RequestTimeoutError(f'Timed out: {e}')
+    except EmptyDataframeException as e:
+        print(f'Empty dataframe with no columns recieved: {e}')
     except Exception as e:
         logger.setLevel(logging.ERROR)
         logger.error(f"unable to retrieve data: {e}")

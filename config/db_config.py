@@ -2,7 +2,6 @@ import os
 import logging
 from utils.logging_utils import setup_logger
 from typing import Dict
-from dotenv import load_dotenv
 
 
 class DatabaseConfigError(Exception):
@@ -11,8 +10,7 @@ class DatabaseConfigError(Exception):
 
 # Configure the logger
 logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
-#load_dotenv('../.env.dev')
-load_dotenv('..')
+# load_dotenv('..')
 
 
 def load_db_config() -> Dict[str, Dict[str, str]]:
@@ -29,20 +27,16 @@ def load_db_config() -> Dict[str, Dict[str, str]]:
     """
 
     config = {
-        "source_database": {
-            "dbname": os.getenv("SOURCE_DB_NAME", "error"),
-            "user": os.getenv("SOURCE_DB_USER", "error"),
-            "password": os.getenv("SOURCE_DB_PASSWORD", ""),
-            "host": os.getenv("SOURCE_DB_HOST", "error"),
-            "port": os.getenv("SOURCE_DB_PORT", "5432"),
-        },
+
         "target_database": {
             "dbname": os.getenv("TARGET_DB_NAME", "error"),
             "user": os.getenv("TARGET_DB_USER", "error"),
             "password": os.getenv("TARGET_DB_PASSWORD", ""),
             "host": os.getenv("TARGET_DB_HOST", "error"),
             "port": os.getenv("TARGET_DB_PORT", "5432"),
-        },
+            "table": os.getenv("TARGET_DB_TABLE", "error"),
+            "schema": os.getenv("TARGET_DB_SCHEMA", "error"),
+        }
     }
 
     validate_db_config(config)
