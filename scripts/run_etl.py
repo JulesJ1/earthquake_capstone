@@ -30,11 +30,13 @@ def main():
 
 def run_pipeline():
     endtime = datetime.now(timezone.utc)
-    starttime = (endtime - timedelta(hours=TIME_LENGTH/60)).strftime('%Y-%m-%dT%H:%M:%S')
+    starttime = (
+        endtime - timedelta(hours=TIME_LENGTH/60)
+        ).strftime('%Y-%m-%dT%H:%M:%S')
     endtime = endtime.strftime('%Y-%m-%dT%H:%M:%S')
 
     data = extract_api(starttime, endtime)
-    
+
     print('Extracted successfully')
 
     data = clean_earthquake_data(data)

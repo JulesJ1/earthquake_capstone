@@ -2,44 +2,42 @@ from utils.db_utils import get_time
 import pandas as pd
 from utils.logging_utils import setup_logger
 import logging
+import time
 
 logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
 
 
 def retrieve_live_data(connection):
-    time = get_time(5)
+    timestamp = get_time(5)
+    start = time.time()
     df = pd.read_sql(
         "SELECT id, time, magnitude, longitude,"
         " latitude, location, type, depth "
         "FROM c12de.jj_capstone "
-        f"WHERE time BETWEEN '{time[0]}' AND '{time[1]}' "
+        f"WHERE time BETWEEN '{timestamp[0]}' AND '{timestamp[1]}' "
         "ORDER BY time DESC;",
         con=connection
 
     )
+    end = time.time()
     logger.setLevel(logging.INFO)
-    logger.info("Queried database for live data")
+    logger.info("Queried database for live data,"
+                f" the query took {round(end-start, 3)}s to run!")
     return df
 
 
-def retrieve_historical_data(connection, start, end):
+def retrieve_historical_data(connection, starttime, endtime):
+    start = time.time()
     df = pd.read_sql(
         "SELECT id, time, magnitude, longitude,"
         " latitude, location, type, depth "
         "FROM c12de.jj_capstone "
-        f"WHERE time BETWEEN '{start}' AND '{end}' "
+        f"WHERE time BETWEEN '{starttime}' AND '{endtime}' "
         "ORDER BY time DESC;",
         con=connection
     )
+    end = time.time()
     logger.setLevel(logging.INFO)
-    logger.info("Queried database for live data")
+    logger.info("Queried database for historical data,"
+                f" the query took {round(end-start, 3)}s to run!")
     return df
-
-
-def retrieve_min_mag(connection):
-    time = get_time(5)
-    query = "SELECT id, time, magnitude, longitude, latitude " \
-            "FROM c12de.jj_capstone " \
-            f"WHERE time BETWEEN '{time[0]}' AND '{time[1]}';"
-    print(query)
-    # output=connection.execute(text(query))

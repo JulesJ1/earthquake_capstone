@@ -1,8 +1,9 @@
 import streamlit as st
 from datetime import datetime, timedelta
-from retrieve_data import retrieve_historical_data, retrieve_live_data
+from streamlit_queries import retrieve_historical_data, retrieve_live_data
 from utils.db_utils import create_connection, create_db_engine
 from config.db_config import load_db_config
+
 
 @st.cache_data
 def fetch_data(start=None, end=None):
@@ -24,17 +25,26 @@ def filter_magnitude():
     magnitude = st.sidebar.slider(
         label='filter minimum magnitude',
         min_value=0.0,
-        max_value=9.5
+        max_value=9.5,
+
         )
     st.session_state['data'] = st.session_state['data'][
-            st.session_state['data']['magnitude'] > magnitude
-        ]
+           st.session_state['data']['magnitude'] >= magnitude
+       ]
 
 
 def filter_type():
     options = ['earthquake', 'ice quake', 'quarry blast', 'explosion']
-    type = st.sidebar.pills('Type', options, selection_mode='multi')
-    #st.session_state['data'] = st.session_state['data'][st.session_state['data']['type'].isin(type)]
+    type = st.sidebar.pills('Type', options, selection_mode='single')
+
+    if st.session_state['data'][
+            st.session_state['data']['type'] == str(type)
+            ].empty:
+        st.write('No data for this type!')
+    else:
+        st.session_state['data'] = st.session_state['data'][
+            st.session_state['data']['type'] == str(type)
+            ]
 
 
 def filter_date():

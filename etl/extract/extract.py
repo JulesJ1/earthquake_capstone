@@ -31,7 +31,7 @@ def extract_api(starttime, endttime):
         data = requests.get(query, timeout=60)
         data.raise_for_status()
         df = pd.json_normalize(data.json(), 'features')
-       
+
         if len(df.columns) == 0:
             raise EmptyDataframeException
         logger.setLevel(logging.INFO)
