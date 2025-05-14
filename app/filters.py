@@ -18,33 +18,49 @@ def fetch_data(start=None, end=None):
 
 def display_live_data():
     if st.sidebar.button(label='Show live data'):
-        st.session_state['data'] = fetch_data()
+        st.session_state['data'] = fetch_data().copy()
 
 
 def filter_magnitude():
-    magnitude = st.sidebar.slider(
+    st.sidebar.slider(
         label='filter minimum magnitude',
         min_value=0.0,
         max_value=9.5,
-
+        key='mag_filter'
         )
-    st.session_state['data'] = st.session_state['data'][
-           st.session_state['data']['magnitude'] >= magnitude
-       ]
 
 
 def filter_type():
     options = ['earthquake', 'ice quake', 'quarry blast', 'explosion']
-    type = st.sidebar.pills('Type', options, selection_mode='single')
+    st.sidebar.pills(
+        'Type',
+        options,
+        selection_mode='single',
+        default=options[0],
+        key='type_filter'
+        )
 
-    if st.session_state['data'][
-            st.session_state['data']['type'] == str(type)
-            ].empty:
-        st.write('No data for this type!')
+
+def call_select_filters():
+    filter_type()
+    filter_magnitude()
+    if (st.session_state['data'][
+        st.session_state['data']['type'] == str(st.session_state.type_filter)
+        ].empty) or (st.session_state['data'][
+         st.session_state['data']['magnitude'] >= st.session_state.mag_filter
+            ].empty):
+        st.badge(
+            'No data available for the selected filters, '
+            'default data will be displayed instead!',
+            icon='❌',
+            color='red')
     else:
-        st.session_state['data'] = st.session_state['data'][
-            st.session_state['data']['type'] == str(type)
-            ]
+        st.session_state['filtered_data'] = st.session_state['data'][
+            (st.session_state['data']['magnitude'] >=
+                st.session_state.mag_filter
+             ) & (st.session_state['data']['type'] ==
+                  str(st.session_state.type_filter))
+            ].copy()
 
 
 def filter_date():
@@ -69,12 +85,15 @@ def filter_date():
         if st.button(label='filter date'):
             start_datetime = f'{start_date} {start_time}'
             end_datetime = f'{end_date} {end_time}'
-            st.session_state['data'] = fetch_data(start_datetime, end_datetime)
+            st.session_state['data'] = fetch_data(
+                start_datetime,
+                end_datetime
+                ).copy()
+            st.session_state['filtered_data'] = st.session_state['data'].copy()
 
 
 def apply_filters():
     st.sidebar.header('Filter data')
     display_live_data()
-    filter_magnitude()
-    filter_type()
+    call_select_filters()
     filter_date()

@@ -18,11 +18,14 @@ def main():
     if 'data' not in st.session_state:
         st.session_state['data'] = fetch_data()
 
+    if 'filtered_Data' not in st.session_state:
+        st.session_state['filtered_data'] = st.session_state['data'].copy()
+
     st.title('Earthquake visualiser')
 
-    display_visualisations()
-
     apply_filters()
+
+    display_visualisations()
 
 
 if __name__ == "__main__":
