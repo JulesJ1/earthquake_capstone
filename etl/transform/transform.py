@@ -6,6 +6,8 @@ logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
 
 
 def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
+
+    # Dropping and renaming columns
     standardised_locations = {
         'CA': 'California',
         'NV': 'Nevada',
@@ -23,7 +25,9 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
         'properties.magType', 'properties.title', 'geometry.type'
     ]
     earthquakes = earthquakes.drop(columns=columns)
-    earthquakes = earthquakes.dropna(subset=['properties.mag'])
+    earthquakes = earthquakes.dropna(
+        subset=['properties.mag']
+        ).reset_index(drop=True)
 
     names = {
         'properties.type': 'type',
@@ -33,24 +37,15 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     }
     earthquakes = earthquakes.rename(columns=names)
 
+    # Reformating time
     earthquakes['time'] = pd.to_datetime(
                             earthquakes['time'],
                             unit='ms'
                         ).dt.floor('s').dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    coordinates = earthquakes['geometry.coordinates'].apply(pd.Series).round(2)
-    coordinates.columns = ['longitude', 'latitude', 'depth']
+    earthquakes = split_coordinates_column(earthquakes)
 
-    earthquakes.drop(columns=['geometry.coordinates'], inplace=True)
-    earthquakes = pd.merge(
-                    earthquakes,
-                    coordinates,
-                    left_index=True,
-                    right_index=True
-                )
-
-    earthquakes['depth'] = earthquakes['depth'].fillna(10)
-
+    # Splits the location into country/region and closest location
     earthquakes['closestLocation'] = earthquakes[
         'location'
         ].apply(closest_location)
@@ -67,6 +62,26 @@ def clean_earthquake_data(earthquakes: pd.DataFrame) -> pd.DataFrame:
     logger.info("Successfully transformed data")
 
     return earthquakes
+
+
+def split_coordinates_column(data: pd.DataFrame) -> pd.DataFrame:
+    # Splits the geometry.coordinates column into 3 seperate columns
+    coordinates = data['geometry.coordinates'].apply(pd.Series).round(2)
+    coordinates.columns = ['longitude', 'latitude', 'depth']
+
+    data.drop(columns=['geometry.coordinates'], inplace=True)
+    data = pd.merge(
+                    data,
+                    coordinates,
+                    left_index=True,
+                    right_index=True
+                )
+
+    data['depth'] = data['depth'].fillna(10)
+    data['magnitude'] = data['magnitude'].round(2)
+    data['depth'] = data['depth'].round(2)
+
+    return data
 
 
 def closest_location(location: str) -> str:

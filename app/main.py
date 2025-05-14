@@ -21,7 +21,7 @@ def main():
     if 'filtered_Data' not in st.session_state:
         st.session_state['filtered_data'] = st.session_state['data'].copy()
 
-    st.title('Earthquake visualiser')
+    st.title('Earthquake Visualiser')
 
     apply_filters()
 

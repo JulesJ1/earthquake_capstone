@@ -34,4 +34,6 @@ def test_clean_data(mocker):
     clean_dataframe = pd.DataFrame(clean_data).iloc[:, 1:]
 
     # Assert
+    print(clean_dataframe)
+    print(transformed_dataframe)
     pd.testing.assert_frame_equal(clean_dataframe, transformed_dataframe)

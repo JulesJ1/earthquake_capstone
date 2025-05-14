@@ -8,19 +8,23 @@ def pick_colour(magnitude):
     if magnitude < 1.5:
         return '#40ad00'
     if magnitude < 3:
-        return '#fae22b'
+        return '#f2d600'
     elif magnitude < 6:
         return 'orange'
     return 'red'
 
 
 def additional_transformations():
-    st.session_state['filtered_data']['normalised_mag'] = (
-            (st.session_state['filtered_data']['magnitude'] -
-             st.session_state['filtered_data']['magnitude'].min()) /
-            (st.session_state['filtered_data']['magnitude'].max() -
-             st.session_state['filtered_data']['magnitude'].min())
-        )
+    if len(st.session_state['filtered_data']) > 1:
+        st.session_state['filtered_data']['normalised_mag'] = (
+                (st.session_state['filtered_data']['magnitude'] -
+                 st.session_state['filtered_data']['magnitude'].min()) /
+                (st.session_state['filtered_data']['magnitude'].max() -
+                 st.session_state['filtered_data']['magnitude'].min())
+            )
+    else:
+        st.session_state['filtered_data']['normalised_mag'] = 2
+
     st.session_state['filtered_data'][
         'colour'] = st.session_state['filtered_data'][
         'magnitude'].transform(pick_colour)
@@ -29,7 +33,7 @@ def additional_transformations():
 def create_map():
     additional_transformations()
 
-    map = folium.Map(location=[41, 35], zoom_start=2, height='40%')
+    map = folium.Map(location=[41, 35], zoom_start=2)
 
     for i, row in st.session_state['filtered_data'].iterrows():
         folium.CircleMarker(
@@ -38,15 +42,13 @@ def create_map():
             tooltip=row.id,
             color=row.colour,
             fill=True,
-            fill_opacity=0.5
+            fill_opacity=0.5,
+            weight=2
         ).add_to(map)
     return map
 
 
 def display_map(map):
-    min_time = st.session_state['filtered_data']['time'].min()
-    max_time = st.session_state['filtered_data']['time'].max()
-    st.subheader(f'Data between {min_time} and {max_time}')
     map_data = st_folium(map, use_container_width=True)
     st.session_state.coordinates = map_data['last_object_clicked']
     st.session_state.info = map_data['last_object_clicked_tooltip']
@@ -72,14 +74,14 @@ def display_info():
             st.divider()
             st.metric('depth km', info['depth'].item())
             st.divider()
-        st.write(f'Occured At: {info['time'].item()}')
+        st.markdown(f'##### Occured At: {info['time'].item()}')
         st.divider()
-        st.write(f'Region: {info['location'].item()}')
+        st.markdown(f'##### Region: {info['location'].item()}')
         st.divider()
-        st.write(f'Event Type: {info['type'].item()}')
+        st.markdown(f'##### Event Type: {info['type'].item()}')
     else:
         st.caption(
-                'Select an event from the map to view some cool information!'
+                'Select an event from the map to view some information!'
             )
 
 
@@ -105,7 +107,7 @@ def second_tab():
             'counted': series.values}
             )
 
-        st.subheader('Number of Earthquakes at Each Hour')
+        st.subheader('Number Of Earthquakes At Each Hour')
         st.bar_chart(
             df2,
             x='hour',
@@ -114,7 +116,7 @@ def second_tab():
             )
 
     with col2:
-        st.subheader('Depth VS Magnitude')
+        st.subheader('Depth vs. Magnitude')
         st.line_chart(
             st.session_state['filtered_data'],
             x='depth',

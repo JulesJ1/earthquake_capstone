@@ -30,8 +30,7 @@ def filter_magnitude():
         )
 
 
-def filter_type():
-    options = ['earthquake', 'ice quake', 'quarry blast', 'explosion']
+def filter_type(options):
     st.sidebar.pills(
         'Type',
         options,
@@ -42,25 +41,24 @@ def filter_type():
 
 
 def call_select_filters():
-    filter_type()
+    options = st.session_state['data']['type'].unique()
+    filter_type(options)
     filter_magnitude()
-    if (st.session_state['data'][
-        st.session_state['data']['type'] == str(st.session_state.type_filter)
-        ].empty) or (st.session_state['data'][
-         st.session_state['data']['magnitude'] >= st.session_state.mag_filter
-            ].empty):
+
+    check_if_empty = st.session_state['data'][
+        (st.session_state['data']['magnitude'] >= st.session_state.mag_filter)
+        & (st.session_state['data']['type'] ==
+           str(st.session_state.type_filter))
+    ]
+    if check_if_empty.empty:
         st.badge(
             'No data available for the selected filters, '
             'default data will be displayed instead!',
             icon='❌',
-            color='red')
+            color='red'
+            )
     else:
-        st.session_state['filtered_data'] = st.session_state['data'][
-            (st.session_state['data']['magnitude'] >=
-                st.session_state.mag_filter
-             ) & (st.session_state['data']['type'] ==
-                  str(st.session_state.type_filter))
-            ].copy()
+        st.session_state['filtered_data'] = check_if_empty.copy()
 
 
 def filter_date():
