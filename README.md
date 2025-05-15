@@ -10,7 +10,8 @@ The clean data in the Postgres database is visualised in a dashboard using strea
 
 The data in the dashboard can be filtered by date, which will query the database for data if the selected date is outside of the currently displayed date. There are also filters for minimum magnitude and type of event which can include earthquakes, ice quakes and explosions. The 'Data Analyser' tab displays the dataframe, a barchart showing the number of occurences for each hour and a lineplot of Depth vs. Magnitude.
 
-The United States Geological Survey (USGS) provides a free API for [recent and historical earthquake information](https://earthquake.usgs.gov/fdsnws/event/1/)
+
+The United States Geological Survey (USGS) is an agency of the U.S. Department of the Interior which studies the landscape of the United States, spanning from biology, geology, geography and hydrology. USGS provides a free API for [recent and historical earthquake information](https://earthquake.usgs.gov/fdsnws/event/1/)
 
 ### Pipeline Flowchart
 ```mermaid
