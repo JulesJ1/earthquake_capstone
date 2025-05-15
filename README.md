@@ -12,6 +12,16 @@ The data in the dashboard can be filtered by date, which will query the database
 
 The United States Geological Survey (USGS) provides a free API for [recent and historical earthquake information](https://earthquake.usgs.gov/fdsnws/event/1/)
 
+### Pipeline Flowchart
+```mermaid
+flowchart LR
+A@{ shape: stadium, label: "USGS Earthquake API"}--> B@{ shape: tri, label: "Extract Data"}
+B-->C[Data Cleaning]
+C-->D[Data Transforming]
+D-->E[Load Data]
+E-->F@{ shape: cyl, label: "Postgres Database"}
+```
+
 ## Project Considerations
 
 ### Optimising Query Execution
@@ -54,9 +64,9 @@ While the database does not contain any confidential information, the transfer o
 
 #### Streamlit App:
 
-- The streamlit dashboard can be containerised using docker and then deployed to an ec2 instance (or multiple instances to increase availability).
+- The streamlit dashboard can be containerised using docker and then deployed to an EC2 instance (or multiple instances to increase availability).
 - An EC2 autoscaling group can be setup to ensure the application is scalable, and a load balancer can be used to route traffic between the instances.
-- A security group for the EC2 instances will address security, allowing communication between the application, internet (through an internet gateway) and rds.
+- A security group for the EC2 instances will address security, allowing communication between the application, internet (through an internet gateway) and RDS.
 - The database credentials and table location variables can be stored using parameter store.
 
 ## Run The Project Locally
@@ -81,7 +91,7 @@ pip install -r requirements-setup.txt
 pip install -e .
 ```
 
-### Running the etl pipeline
+### Running The Pipeline
 
 1. create a file named .env in the root directory.
 2. Set the following environment variables for the pipeline's database destination:
@@ -105,7 +115,7 @@ run_etl prod
 ### Running tests
 
 1. create a file named .env.test in the root directory.
-2. Set the test database environment variables the same way as step 2 in Running the etl pipeline.
+2. Set the test database environment variables the same way as step 2 in Running the ETL pipeline.
 3. Run the following script, providing the type of test as an argument:
 
 ```bash
