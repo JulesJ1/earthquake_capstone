@@ -1,12 +1,11 @@
 import logging
 from sqlalchemy import create_engine
 from utils.logging_utils import setup_logger
-from sqlalchemy.exc import (  # InvalidRequestError,
+from sqlalchemy.exc import (
                             OperationalError,
-                            # IntegrityError,
                             SQLAlchemyError,
-                            # DataError,
-                            DatabaseError)
+                            DatabaseError
+                            )
 from datetime import datetime, timezone, timedelta
 
 logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
