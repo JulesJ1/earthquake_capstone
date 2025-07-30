@@ -2,6 +2,7 @@ import os
 import logging
 from utils.logging_utils import setup_logger
 from typing import Dict
+from dotenv import load_dotenv
 
 
 class DatabaseConfigError(Exception):
@@ -25,7 +26,7 @@ def load_db_config() -> Dict[str, Dict[str, str]]:
     :return: Dictionary containing source and target database
     connection parameters.
     """
-
+    load_dotenv('.env')
     config = {
 
         "target_database": {
