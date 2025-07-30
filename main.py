@@ -1,6 +1,6 @@
 import streamlit as st
-from filters import apply_filters, fetch_data
-from visualisations import display_visualisations
+from app.filters import apply_filters, fetch_data
+from app.visualisations import display_visualisations
 from utils.logging_utils import setup_logger
 import logging
 

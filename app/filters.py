@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
-from streamlit_queries import retrieve_historical_data, retrieve_live_data, retrieve_latest_data
+from app.streamlit_queries import retrieve_historical_data, retrieve_live_data, retrieve_latest_data
 from utils.db_utils import create_connection, create_db_engine
 from config.db_config import load_db_config
 
