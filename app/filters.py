@@ -16,10 +16,10 @@ def fetch_data(start=None, end=None):
     
     livedata = retrieve_live_data(conn)
 
-    if livedata.empty:
-        return retrieve_latest_data(conn)
-    
-    return livedata
+    if livedata.empty is False:
+        return livedata
+
+    return retrieve_latest_data(conn)
 
 
 def display_live_data():
