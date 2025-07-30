@@ -16,6 +16,7 @@ def main():
     )
 
     if 'data' not in st.session_state:
+        st.session_state['heatmap'] = False
         st.session_state['data'] = fetch_data()
 
     if 'filtered_Data' not in st.session_state:

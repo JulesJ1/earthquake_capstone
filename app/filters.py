@@ -21,6 +21,14 @@ def display_live_data():
         st.session_state['data'] = fetch_data().copy()
 
 
+def toggle_heatmap():
+    heatmap = st.sidebar.toggle("heatmap")
+    if heatmap:
+        st.session_state['heatmap'] = True
+    else:
+        st.session_state['heatmap'] = False
+
+
 def filter_magnitude():
     st.sidebar.slider(
         label='filter minimum magnitude',
@@ -69,7 +77,8 @@ def filter_date():
         with start:
             start_date = st.date_input(
                 'start date',
-                value=datetime.now() - timedelta(hours=6)
+                value=datetime.now() - timedelta(hours=6),
+
             )
 
             start_time = st.time_input(
@@ -80,18 +89,27 @@ def filter_date():
             end_date = st.date_input('end date')
             end_time = st.time_input('end time')
 
+        start_dt = datetime.combine(start_date, start_time)
+        end_dt = datetime.combine(end_date, end_time)
+
         if st.button(label='filter date'):
-            start_datetime = f'{start_date} {start_time}'
-            end_datetime = f'{end_date} {end_time}'
-            st.session_state['data'] = fetch_data(
-                start_datetime,
-                end_datetime
-                ).copy()
-            st.session_state['filtered_data'] = st.session_state['data'].copy()
+            if start_dt >= end_dt:
+                st.warning("Start date/time must be before end date/time.")
+            else:
+                start_datetime = f'{start_date} {start_time}'
+                end_datetime = f'{end_date} {end_time}'
+                st.session_state['data'] = fetch_data(
+                    start_datetime,
+                    end_datetime
+                    ).copy()
+                st.session_state[
+                    'filtered_data'
+                    ] = st.session_state['data'].copy()
 
 
 def apply_filters():
     st.sidebar.header('Filter data')
     display_live_data()
+    toggle_heatmap()
     call_select_filters()
     filter_date()

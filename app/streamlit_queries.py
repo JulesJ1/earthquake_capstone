@@ -11,7 +11,7 @@ logger = setup_logger(__name__, "database_query.log", level=logging.DEBUG)
 
 def time_query(starttime, endtime):
     return "SELECT id, time, magnitude, longitude,"\
-        " latitude, location, type, depth "\
+        " latitude, location, type, depth, apisource "\
         "FROM c12de.jj_capstone "\
         f"WHERE time BETWEEN '{starttime}' AND '{endtime}' "\
         "ORDER BY time DESC;"
