@@ -64,3 +64,32 @@ def retrieve_historical_data(connection, starttime, endtime):
         logger.setLevel(logging.ERROR)
         logger.error(f"Database error: {e}")
         print(f'Database error: {e}')
+
+
+def retrieve_latest_data(connection):
+    try:
+        query = "SELECT id, time, magnitude, longitude,"\
+                " latitude, location, type, depth, apisource "\
+                "FROM c12de.jj_capstone "\
+                "ORDER BY time DESC "\
+                "LIMIT 30;"
+        start = time.time()
+        df = pd.read_sql(
+            query,
+            con=connection
+        )
+        end = time.time()
+        logger.setLevel(logging.INFO)
+        logger.info("Queried database for the most recent data,"
+                    f" the query took {round(end-start, 3)}s to run!")
+        return df
+
+    except TimeoutError as e:
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Timeout error: {e}")
+        print(f'Timeout error: {e}')
+
+    except DatabaseError as e:
+        logger.setLevel(logging.ERROR)
+        logger.error(f"Database error: {e}")
+        print(f'Database error: {e}')

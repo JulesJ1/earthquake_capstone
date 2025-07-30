@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime, timedelta
-from streamlit_queries import retrieve_historical_data, retrieve_live_data
+from streamlit_queries import retrieve_historical_data, retrieve_live_data, retrieve_latest_data
 from utils.db_utils import create_connection, create_db_engine
 from config.db_config import load_db_config
 
@@ -13,7 +13,13 @@ def fetch_data(start=None, end=None):
     conn = create_connection(engine)
     if start or end:
         return retrieve_historical_data(conn, start, end)
-    return retrieve_live_data(conn)
+    
+    livedata = retrieve_live_data(conn)
+
+    if livedata.empty:
+        return retrieve_latest_data(conn)
+    
+    return livedata
 
 
 def display_live_data():
@@ -33,7 +39,7 @@ def filter_magnitude():
     st.sidebar.slider(
         label='filter minimum magnitude',
         min_value=0.0,
-        max_value=9.5,
+        max_value=max(st.session_state['data']['magnitude']),
         key='mag_filter'
         )
 
@@ -111,5 +117,5 @@ def apply_filters():
     st.sidebar.header('Filter data')
     display_live_data()
     toggle_heatmap()
-    call_select_filters()
+    #call_select_filters()
     filter_date()

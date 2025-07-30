@@ -17,6 +17,7 @@ def pick_colour(magnitude):
 
 
 def additional_transformations():
+    
     if len(st.session_state['filtered_data']) > 1:
         st.session_state['filtered_data']['normalised_mag'] = (
                 (st.session_state['filtered_data']['magnitude'] -
@@ -139,6 +140,7 @@ def second_tab():
 
 
 def metrics(data):
+    
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -154,23 +156,18 @@ def metrics(data):
 
 def graphs(data):
 
-    series = data['magnitude'].groupby(
-            data['time'].dt.hour
-            ).count()
-
-    series = series.reindex(range(23), fill_value=0)
-    df2 = pd.DataFrame({
-            'hour': series.index.map(str)+":00",
-            'counted': series.values}
-            )
-
+    hour_series = data['time'].dt.hour
+  
+    counts = hour_series.value_counts().sort_index()
+   
+    counts = counts.reindex(range(24), fill_value=0)
+    
+    df = pd.DataFrame({
+        'hour': [f"{h:02d}:00" for h in counts.index],
+        'count': counts.values
+    })
     st.subheader('Number Of Earthquakes At Each Hour')
-    st.bar_chart(
-            df2,
-            x='hour',
-            y='counted',
-            y_label='number of earthquakes'
-            )
+    st.bar_chart(df, x='hour', y='count', y_label='number of earthquakes')
 
     col1, col2 = st.columns(2)
     with col1:
@@ -178,7 +175,8 @@ def graphs(data):
         fig = px.histogram(
             data,
             x="location",
-            title="locations"
+            
+            title="Number Of Earthquakes At Each Location"
 
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -201,6 +199,46 @@ def graphs(data):
         x_label='depth (km)',
         color='#008f2b'
         )
+
+
+def filter_magnitude(data):
+    st.sidebar.slider(
+        label='filter minimum magnitude',
+        min_value=0.0,
+        max_value=max(data['magnitude']),
+        key='mag_filter'
+        )
+
+
+def filter_type(options):
+    st.sidebar.pills(
+        'Type',
+        options,
+        selection_mode='single',
+        default=options[0],
+        key='type_filter'
+        )
+
+
+def call_select_filters(data):
+    options = data['type'].unique()
+    filter_type(options)
+    filter_magnitude(data)
+
+    check_if_empty = data[
+        (data['magnitude'] >= st.session_state.mag_filter)
+        & (data['type'] ==
+           str(st.session_state.type_filter))
+    ]
+    if check_if_empty.empty:
+        st.badge(
+            'No data available for the selected filters, '
+            'default data will be displayed instead!',
+            icon='❌',
+            color='red'
+            )
+    else:
+        data = check_if_empty.copy()
 
 
 def display_visualisations():
@@ -231,7 +269,7 @@ def display_visualisations():
         data = st.session_state['filtered_data'].loc[
             st.session_state['filtered_data']['apisource'] == 'esmc'
             ]
-
+        
         map = create_map(data)
 
         col1, col2 = st.columns([0.7, 0.3], gap='medium')
