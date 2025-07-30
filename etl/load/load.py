@@ -59,6 +59,7 @@ def create_table(engine, metadata, table_details):
             Column('latitude', NUMERIC),
             Column('depth', NUMERIC),
             Column('closestLocation', VARCHAR(70)),
+            Column('apisource', VARCHAR(10)),
             schema=table_details[1]
             )
 
