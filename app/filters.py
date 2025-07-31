@@ -1,30 +1,33 @@
 import streamlit as st
 from datetime import datetime, timedelta
-from app.streamlit_queries import retrieve_historical_data, retrieve_live_data, retrieve_latest_data
+from app.streamlit_queries import (retrieve_historical_data,
+                                   retrieve_live_data,
+                                   retrieve_latest_data)
 from utils.db_utils import create_connection, create_db_engine
 from config.db_config import load_db_config
 
 
 @st.cache_data
 def fetch_data(start=None, end=None):
+
     db_details = load_db_config()['target_database']
 
     engine = create_db_engine(db_details)
     conn = create_connection(engine)
     if start or end:
         return retrieve_historical_data(conn, start, end)
-    
+
     livedata = retrieve_live_data(conn)
 
     if livedata.empty is False:
         return livedata
-
     return retrieve_latest_data(conn)
 
 
 def display_live_data():
-    if st.sidebar.button(label='Show live data'):
+    if st.sidebar.button(label='Show Live Data'):
         st.session_state['data'] = fetch_data().copy()
+        st.session_state['filtered_data'] = st.session_state['data'].copy()
 
 
 def toggle_heatmap():
@@ -114,8 +117,8 @@ def filter_date():
 
 
 def apply_filters():
-    st.sidebar.header('Filter data')
+    st.sidebar.header('Filter Data')
     display_live_data()
-    toggle_heatmap()
-    #call_select_filters()
+    # toggle_heatmap()
+    # call_select_filters()
     filter_date()

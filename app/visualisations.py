@@ -17,7 +17,7 @@ def pick_colour(magnitude):
 
 
 def additional_transformations():
-    
+
     if len(st.session_state['filtered_data']) > 1:
         st.session_state['filtered_data']['normalised_mag'] = (
                 (st.session_state['filtered_data']['magnitude'] -
@@ -65,37 +65,37 @@ def heatmap(data):
     st_folium(map, use_container_width=True)
 
 
-def display_info():
-    st.subheader('Earthquake Info:')
+def display_info(current_data):
+    st.divider()
+    st.subheader('Earthquake Information')
 
     if st.session_state.coordinates is not None:
         tooltip_info = st.session_state.info
-        info = st.session_state['filtered_data'][
-                st.session_state['filtered_data']['id'] == str(tooltip_info)
+        info = current_data[
+                current_data['id'] == str(tooltip_info)
             ]
 
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
-            st.metric('latitude', info['latitude'])
+            st.metric('latitude', round(info['latitude'], 2))
             st.divider()
             st.metric('magnitude', info['magnitude'].item())
             st.divider()
         with col2:
-            st.metric('longitude', info['longitude'])
+            st.metric('longitude', round(info['longitude'], 2))
             st.divider()
             st.metric('depth km', info['depth'].item())
             st.divider()
         st.markdown(f'##### Occured At: {info['time'].item()}')
         st.divider()
         st.markdown(f'##### Region: {info['location'].item()}')
-        st.divider()
-        st.markdown(f'##### Event Type: {info['type'].item()}')
-    """
+        # st.divider()
+        # st.markdown(f'##### Event Type: {info['type'].item()}')
+
     else:
         st.caption(
                 'Select an event from the map to view some information!'
             )
-    """
 
 
 def second_tab():
@@ -140,11 +140,11 @@ def second_tab():
 
 
 def metrics(data):
-    
+
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric(label="Earthquakes Today",
+        st.metric(label="Earthquake Count",
                   value=len(data))
     with col2:
         st.metric(label="Highest Magnitude",
@@ -157,11 +157,11 @@ def metrics(data):
 def graphs(data):
 
     hour_series = data['time'].dt.hour
-  
+
     counts = hour_series.value_counts().sort_index()
-   
+
     counts = counts.reindex(range(24), fill_value=0)
-    
+
     df = pd.DataFrame({
         'hour': [f"{h:02d}:00" for h in counts.index],
         'count': counts.values
@@ -175,7 +175,6 @@ def graphs(data):
         fig = px.histogram(
             data,
             x="location",
-            
             title="Number Of Earthquakes At Each Location"
 
         )
@@ -186,12 +185,13 @@ def graphs(data):
         fig = px.histogram(
             data,
             x="magnitude",
-            nbins=20,  # adjust as needed
-            title="Magnitude Histogram"
+            nbins=20,
+            title="Magnitude Histogram",
         )
         st.plotly_chart(fig, use_container_width=True)
 
     st.subheader('Depth vs. Magnitude')
+
     st.scatter_chart(
         data,
         x='depth',
@@ -199,6 +199,14 @@ def graphs(data):
         x_label='depth (km)',
         color='#008f2b'
         )
+    """
+    fig = px.scatter(
+        data,
+        x='depth',
+        y='magnitude',
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    """
 
 
 def filter_magnitude(data):
@@ -245,43 +253,107 @@ def display_visualisations():
     additional_transformations()
     tab1, tab2 = st.tabs(["USGS Data", "ESMC Data"])
     with tab1:
-        data1 = st.session_state['filtered_data'].loc[
-            st.session_state['filtered_data']['apisource'] == 'USGS'
-            ]
 
-        map = create_map(data1)
+        if 'mag_filter_usgs' not in st.session_state:
+            usgsdata = st.session_state['filtered_data'].loc[
+                (st.session_state['filtered_data']['apisource'] == 'USGS')]
 
-        col1, col2 = st.columns([0.7, 0.3], gap='medium')
+        else:
+            usgsdata = st.session_state['filtered_data'].loc[
+                (st.session_state['filtered_data']['apisource'] == 'USGS')
+                & (st.session_state[
+                    'filtered_data'
+                    ]['magnitude'] >= st.session_state['mag_filter_usgs'])
+                ]
+
+        if "location_search_usgs" in st.session_state:
+            usgsdata = usgsdata[
+                usgsdata['location'].str.contains(
+                    st.session_state[
+                        'location_search_usgs'
+                        ], case=False, na=False)
+                ]
+
+        map = create_map(usgsdata)
+
+        col1, col2 = st.columns([0.8, 0.2], gap='medium')
         with col1.container():
-            metrics(data1)
+            metrics(usgsdata)
 
-            if st.session_state['heatmap']:
-                heatmap(data1)
+            show_heatmap = st.session_state.get('heatmap_usgs', False)
+            if show_heatmap:
+                heatmap(usgsdata)
             else:
                 display_map(map)
 
         with col2.container():
-            display_info()
+            # display_info()
+            st.subheader("Local Filters")
+            st.slider(
+                label='filter minimum magnitude',
+                min_value=0.0,
+                max_value=float(
+                    usgsdata['magnitude'].max()
+                    ) if not usgsdata.empty else 10.0,
+                key='mag_filter_usgs'
+            )
 
-        graphs(data1)
+            st.toggle("heatmap", key='heatmap_usgs')
+            st.text_input("Search by location:", key="location_search_usgs")
+
+            display_info(usgsdata)
+
+        graphs(usgsdata)
 
     with tab2:
-        data = st.session_state['filtered_data'].loc[
-            st.session_state['filtered_data']['apisource'] == 'esmc'
-            ]
-        
-        map = create_map(data)
 
-        col1, col2 = st.columns([0.7, 0.3], gap='medium')
+        if 'mag_filter_esmc' not in st.session_state:
+            esmcdata = st.session_state['filtered_data'].loc[
+                (st.session_state['filtered_data']['apisource'] == 'esmc')]
+
+        else:
+            esmcdata = st.session_state['filtered_data'].loc[
+                (st.session_state['filtered_data']['apisource'] == 'esmc')
+                & (st.session_state[
+                    'filtered_data'
+                    ]['magnitude'] >= st.session_state['mag_filter_esmc'])
+                ]
+
+        if "location_search_esmc" in st.session_state:
+            esmcdata = esmcdata[esmcdata[
+                'location'
+                ].str.contains(
+                st.session_state['location_search_esmc'], case=False, na=False
+                )]
+
+        map = create_map(esmcdata)
+
+        col1, col2 = st.columns([0.8, 0.2], gap='medium')
         with col1.container():
-            metrics(data)
+            metrics(esmcdata)
 
-            if st.session_state['heatmap']:
-                heatmap(data)
+            show_heatmap = st.session_state.get('heatmap_esmc', False)
+            if show_heatmap:
+                heatmap(esmcdata)
             else:
                 display_map(map)
 
         with col2.container():
-            display_info()
+            # display_info()
+            st.subheader("Local Filters")
+            st.slider(
+                label='filter minimum magnitude',
+                min_value=0.0,
+                max_value=float(esmcdata[
+                    'magnitude'].max()) if not esmcdata.empty else 10.0,
+                key='mag_filter_esmc'
+            )
 
-        graphs(data)
+            st.toggle("heatmap", key='heatmap_esmc')
+            st.text_input(
+                "Search by location (case-insensitive):",
+                key="location_search_esmc")
+
+            display_info(esmcdata)
+
+        graphs(esmcdata)
