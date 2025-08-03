@@ -20,6 +20,7 @@ def time_query(starttime, endtime):
 def retrieve_live_data(connection):
     try:
         timestamp = get_time(5)
+        print(timestamp)
         start = time.time()
         df = pd.read_sql(
             time_query(timestamp[0], timestamp[1]),

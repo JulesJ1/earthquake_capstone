@@ -38,10 +38,16 @@ def create_map(data):
     map = folium.Map(location=[41, 35], zoom_start=2)
 
     for i, row in data.iterrows():
+        tooltip_text = (
+            f"Location: {row.location}<br>"
+            f"Longitude: {row.longitude}<br>"
+            f"Latitude: {row.latitude}<br>"
+            f"Id: {row.id}"
+        )
         folium.CircleMarker(
             [row.latitude, row.longitude],
             radius=5+(10*row.normalised_mag),
-            tooltip=row.id,
+            tooltip=tooltip_text,
             color=row.colour,
             fill=True,
             fill_opacity=0.5,
@@ -53,7 +59,12 @@ def create_map(data):
 def display_map(map):
     map_data = st_folium(map, use_container_width=True)
     st.session_state.coordinates = map_data['last_object_clicked']
-    st.session_state.info = map_data['last_object_clicked_tooltip']
+    if map_data['last_object_clicked_tooltip']:
+        st.session_state.info = map_data[
+            'last_object_clicked_tooltip'
+            ].split("Id: ")[1]
+    else:
+        st.session_state.info = None
 
 
 def heatmap(data):
@@ -77,14 +88,14 @@ def display_info(current_data):
 
         col1, col2 = st.columns([0.5, 0.5])
         with col1:
-            st.metric('latitude', round(info['latitude'], 2))
+            st.metric('Longitude', round(info['longitude'], 2))
             st.divider()
-            st.metric('magnitude', info['magnitude'].item())
+            st.metric('Magnitude', info['magnitude'].item())
             st.divider()
         with col2:
-            st.metric('longitude', round(info['longitude'], 2))
+            st.metric('Latitude', round(info['latitude'], 2))
             st.divider()
-            st.metric('depth km', info['depth'].item())
+            st.metric('Depth km', info['depth'].item())
             st.divider()
         st.markdown(f'##### Occured At: {info['time'].item()}')
         st.divider()
@@ -94,7 +105,7 @@ def display_info(current_data):
 
     else:
         st.caption(
-                'Select an event from the map to view some information!'
+                'Select an earthquake from the map to view some information!'
             )
 
 
@@ -175,7 +186,7 @@ def graphs(data):
         fig = px.histogram(
             data,
             x="location",
-            title="Number Of Earthquakes At Each Location"
+            title="Number Of Earthquakes Per Location"
 
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -192,6 +203,7 @@ def graphs(data):
 
     st.subheader('Depth vs. Magnitude')
 
+    """
     st.scatter_chart(
         data,
         x='depth',
@@ -200,13 +212,14 @@ def graphs(data):
         color='#008f2b'
         )
     """
+
     fig = px.scatter(
         data,
         x='depth',
         y='magnitude',
+        trendline="ols"
     )
     st.plotly_chart(fig, use_container_width=True)
-    """
 
 
 def filter_magnitude(data):
@@ -249,111 +262,67 @@ def call_select_filters(data):
         data = check_if_empty.copy()
 
 
+def tabdata(source):
+    sourcename = source
+    sourcedata = f'mag_filter_{sourcename}'
+    sourcelocation = f'location_search_{sourcename}'
+
+    if sourcedata not in st.session_state:
+        data = st.session_state['filtered_data'].loc[
+            (st.session_state['filtered_data']['apisource'] == sourcename)]
+
+    else:
+        data = st.session_state['filtered_data'].loc[
+            (st.session_state['filtered_data']['apisource'] == sourcename)
+            & (st.session_state[
+                'filtered_data'
+                ]['magnitude'] >= st.session_state[sourcedata])
+            ]
+
+    if sourcelocation in st.session_state:
+        data = data[
+            data['location'].str.contains(
+                st.session_state[
+                    sourcelocation
+                    ], case=False, na=False)
+            ]
+
+    col1, col2 = st.columns([0.8, 0.2], gap='medium')
+    with col1.container():
+        metrics(data)
+
+        show_heatmap = st.session_state.get(f'heatmap_{sourcename}', False)
+
+        if show_heatmap:
+            heatmap(data)
+        else:
+            map = create_map(data)
+            display_map(map)
+
+    with col2.container():
+
+        st.subheader(f"{sourcename.upper()} Data Filters")
+        st.slider(
+            label='Filter Minimum Magnitude',
+            min_value=0.0,
+            max_value=float(
+                data['magnitude'].max()
+                ) if not data.empty else 10.0,
+            key=sourcedata
+        )
+
+        st.toggle("Heatmap", key=f'heatmap_{sourcename}')
+        st.text_input("Search By Location", key=sourcelocation)
+
+        display_info(data)
+
+    graphs(data)
+
+
 def display_visualisations():
     additional_transformations()
     tab1, tab2 = st.tabs(["USGS Data", "ESMC Data"])
     with tab1:
-
-        if 'mag_filter_usgs' not in st.session_state:
-            usgsdata = st.session_state['filtered_data'].loc[
-                (st.session_state['filtered_data']['apisource'] == 'USGS')]
-
-        else:
-            usgsdata = st.session_state['filtered_data'].loc[
-                (st.session_state['filtered_data']['apisource'] == 'USGS')
-                & (st.session_state[
-                    'filtered_data'
-                    ]['magnitude'] >= st.session_state['mag_filter_usgs'])
-                ]
-
-        if "location_search_usgs" in st.session_state:
-            usgsdata = usgsdata[
-                usgsdata['location'].str.contains(
-                    st.session_state[
-                        'location_search_usgs'
-                        ], case=False, na=False)
-                ]
-
-        map = create_map(usgsdata)
-
-        col1, col2 = st.columns([0.8, 0.2], gap='medium')
-        with col1.container():
-            metrics(usgsdata)
-
-            show_heatmap = st.session_state.get('heatmap_usgs', False)
-            if show_heatmap:
-                heatmap(usgsdata)
-            else:
-                display_map(map)
-
-        with col2.container():
-            # display_info()
-            st.subheader("Local Filters")
-            st.slider(
-                label='filter minimum magnitude',
-                min_value=0.0,
-                max_value=float(
-                    usgsdata['magnitude'].max()
-                    ) if not usgsdata.empty else 10.0,
-                key='mag_filter_usgs'
-            )
-
-            st.toggle("heatmap", key='heatmap_usgs')
-            st.text_input("Search by location:", key="location_search_usgs")
-
-            display_info(usgsdata)
-
-        graphs(usgsdata)
-
+        tabdata("USGS")
     with tab2:
-
-        if 'mag_filter_esmc' not in st.session_state:
-            esmcdata = st.session_state['filtered_data'].loc[
-                (st.session_state['filtered_data']['apisource'] == 'esmc')]
-
-        else:
-            esmcdata = st.session_state['filtered_data'].loc[
-                (st.session_state['filtered_data']['apisource'] == 'esmc')
-                & (st.session_state[
-                    'filtered_data'
-                    ]['magnitude'] >= st.session_state['mag_filter_esmc'])
-                ]
-
-        if "location_search_esmc" in st.session_state:
-            esmcdata = esmcdata[esmcdata[
-                'location'
-                ].str.contains(
-                st.session_state['location_search_esmc'], case=False, na=False
-                )]
-
-        map = create_map(esmcdata)
-
-        col1, col2 = st.columns([0.8, 0.2], gap='medium')
-        with col1.container():
-            metrics(esmcdata)
-
-            show_heatmap = st.session_state.get('heatmap_esmc', False)
-            if show_heatmap:
-                heatmap(esmcdata)
-            else:
-                display_map(map)
-
-        with col2.container():
-            # display_info()
-            st.subheader("Local Filters")
-            st.slider(
-                label='filter minimum magnitude',
-                min_value=0.0,
-                max_value=float(esmcdata[
-                    'magnitude'].max()) if not esmcdata.empty else 10.0,
-                key='mag_filter_esmc'
-            )
-
-            st.toggle("heatmap", key='heatmap_esmc')
-            st.text_input(
-                "Search by location (case-insensitive):",
-                key="location_search_esmc")
-
-            display_info(esmcdata)
-
-        graphs(esmcdata)
+        tabdata("esmc")

@@ -7,7 +7,7 @@ from utils.db_utils import create_connection, create_db_engine
 from config.db_config import load_db_config
 
 
-@st.cache_data
+# @st.cache_data
 def fetch_data(start=None, end=None):
 
     db_details = load_db_config()['target_database']
@@ -85,23 +85,23 @@ def filter_date():
         start, end = st.columns(2)
         with start:
             start_date = st.date_input(
-                'start date',
+                'Start Date',
                 value=datetime.now() - timedelta(hours=6),
 
             )
 
             start_time = st.time_input(
-                'start time',
+                'Start Time',
                 value=datetime.now() - timedelta(hours=6)
             )
         with end:
-            end_date = st.date_input('end date')
-            end_time = st.time_input('end time')
+            end_date = st.date_input('End Date')
+            end_time = st.time_input('End Time')
 
         start_dt = datetime.combine(start_date, start_time)
         end_dt = datetime.combine(end_date, end_time)
 
-        if st.button(label='filter date'):
+        if st.button(label='Filter Date'):
             if start_dt >= end_dt:
                 st.warning("Start date/time must be before end date/time.")
             else:

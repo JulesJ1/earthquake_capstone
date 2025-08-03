@@ -15,6 +15,9 @@ def main():
         initial_sidebar_state="auto",
     )
 
+    with open('style.css') as f:
+        st.write(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
     if 'data' not in st.session_state:
         st.session_state['heatmap'] = False
         st.session_state['data'] = fetch_data()
@@ -22,7 +25,7 @@ def main():
     if 'filtered_Data' not in st.session_state:
         st.session_state['filtered_data'] = st.session_state['data'].copy()
 
-    st.title('Earthquake Visualiser')
+    st.title('Earthquake Dashboard')
 
     apply_filters()
 
