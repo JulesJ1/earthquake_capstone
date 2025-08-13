@@ -19,13 +19,17 @@ def fetch_data(start=None, end=None):
 
     livedata = retrieve_live_data(conn)
 
-    if livedata.empty is False:
+    if (
+        "USGS" in livedata['apisource'].values
+        ) and (
+            "esmc" in livedata['apisource'].values
+            ):
         return livedata
     return retrieve_latest_data(conn)
 
 
 def display_live_data():
-    if st.sidebar.button(label='Show Live Data'):
+    if st.sidebar.button(label='Show Recent Data'):
         st.session_state['data'] = fetch_data().copy()
         st.session_state['filtered_data'] = st.session_state['data'].copy()
 

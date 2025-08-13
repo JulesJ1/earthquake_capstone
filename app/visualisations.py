@@ -100,8 +100,6 @@ def display_info(current_data):
         st.markdown(f'##### Occured At: {info['time'].item()}')
         st.divider()
         st.markdown(f'##### Region: {info['location'].item()}')
-        # st.divider()
-        # st.markdown(f'##### Event Type: {info['type'].item()}')
 
     else:
         st.caption(
@@ -280,12 +278,13 @@ def tabdata(source):
             ]
 
     if sourcelocation in st.session_state:
-        data = data[
-            data['location'].str.contains(
-                st.session_state[
-                    sourcelocation
-                    ], case=False, na=False)
-            ]
+        search_str = st.session_state[sourcelocation]
+
+        if data['location'].str.contains(
+                search_str, case=False, na=False).any():
+            data = data[data['location'].str.contains(
+                search_str, case=False, na=False
+                )]
 
     col1, col2 = st.columns([0.8, 0.2], gap='medium')
     with col1.container():

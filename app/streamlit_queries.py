@@ -69,11 +69,19 @@ def retrieve_historical_data(connection, starttime, endtime):
 
 def retrieve_latest_data(connection):
     try:
-        query = "SELECT id, time, magnitude, longitude,"\
-                " latitude, location, type, depth, apisource "\
-                "FROM c12de.jj_capstone "\
-                "ORDER BY time DESC "\
-                "LIMIT 30;"
+        query = "(SELECT id, time, magnitude, longitude,"\
+            "latitude, location, type, depth, apisource"\
+            " FROM c12de.jj_capstone"\
+            " where apisource = 'USGS'"\
+            " ORDER BY time DESC"\
+            " LIMIT 30)"\
+            " UNION"\
+            " (SELECT id, time, magnitude, longitude,"\
+            "latitude, location, type, depth, apisource"\
+            " FROM c12de.jj_capstone"\
+            " where apisource = 'esmc'"\
+            " ORDER BY time DESC"\
+            " LIMIT 30);"
         start = time.time()
         df = pd.read_sql(
             query,
