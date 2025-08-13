@@ -8,9 +8,10 @@ def test_extract_success(mocker):
     mock_requests = mocker.patch('etl.extract.extract.requests.get')
     teststarttime = '2025-05-05T12:00:00'
     testendtime = '2025-05-06T12:00:00'
-    query = f'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime={teststarttime}&endtime={testendtime}'
+    query = 'https://earthquake.usgs.gov/fdsnws/event/1/query?'\
+            f'format=geojson&starttime={teststarttime}&endtime={testendtime}'
     # Act
-    extract_api(teststarttime, testendtime)
+    extract_api(query)
     # Assert
     mock_requests.assert_called_once_with(query, timeout=60)
     mock_requests = mocker.patch('etl.extract.extract.requests.get')
@@ -24,18 +25,16 @@ def test_extract_bad_request(mocker):
     )
     # Act
     with pytest.raises(
-                    Exception, 
+                    Exception,
                     match=f'HTTP error: {400}'
                     ):
-        response = extract_api('teststarttime', 'testendtime')
+        response = extract_api('testquery')
         # Assert
         assert response == f'HTTP error: {400}'
 
 
 def test_extract_failure(mocker):
-    # ArraNGE
-    teststarttime = '2025-05-05T12:00:00'
-    testendtime = '2025-05-06T12:00:00'
+    # Arrange
     mocker.patch(
                     'etl.extract.extract.requests.get',
                     side_effect=Exception(
@@ -44,10 +43,10 @@ def test_extract_failure(mocker):
                 )
 
     with pytest.raises(
-                        Exception, 
+                        Exception,
                         match=f'unable to retrieve data: {Exception}'
                        ):
         # Act
-        response = extract_api(teststarttime, testendtime)
+        response = extract_api("testquery")
         # Assert
         assert response == f'unable to retrieve data: {Exception}'
