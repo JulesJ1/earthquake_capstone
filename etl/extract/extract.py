@@ -25,8 +25,6 @@ logger = setup_logger(__name__, "database.log", level=logging.DEBUG)
 
 def extract_api(query):
     try:
-        # query = 'https://earthquake.usgs.gov/fdsnws/event/1/query'\
-        #    f'?format=geojson&starttime={starttime}&endtime={endttime}'
 
         data = requests.get(query, timeout=60)
         data.raise_for_status()
