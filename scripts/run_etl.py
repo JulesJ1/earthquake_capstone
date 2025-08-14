@@ -12,6 +12,13 @@ import time
 
 TIME_LENGTH = 30
 
+QUERY_URLS = {
+    "usgs": "https://earthquake.usgs.gov/fdsnws/event/1/query?"
+    "format=geojson&starttime={starttime}&endtime={endtime}",
+    "esmc": "http://www.seismicportal.eu/fdsnws/event/1/query?"
+    "start={starttime}&end={endtime}&format=json"
+}
+
 
 def main():
     run_env_setup()
@@ -26,12 +33,9 @@ def main():
             ).strftime('%Y-%m-%dT%H:%M:%S')
         endtime = endtime.strftime('%Y-%m-%dT%H:%M:%S')
 
-        usgsquery = 'https://earthquake.usgs.gov/fdsnws/event/1/query'\
-                    f'?format=geojson&starttime={starttime}&endtime={endtime}'
-        esmcquery = 'http://www.seismicportal.eu/fdsnws/event/1/query'\
-                    f'?start={starttime}&end={endtime}&format=json'
-        run_pipeline(usgsquery, "usgs")
-        run_pipeline(esmcquery, "esmc")
+        for source, url_template in QUERY_URLS.items():
+            query = url_template.format(starttime=starttime, endtime=endtime)
+            run_pipeline(query, source)
 
         print(f'Pipeline will run every {TIME_LENGTH} minutes')
         base_path = os.path.dirname(__file__)
@@ -43,24 +47,27 @@ def main():
 
 
 def run_pipeline(query, source):
+    try:
+        data = extract_api(query)
 
-    data = extract_api(query)
+        print('Extracted successfully')
 
-    print('Extracted successfully')
+        if source == "usgs":
+            data = clean_earthquake_data(data)
+        else:
+            data = transform_esmc_data(data)
+        print('Data cleaned successfully')
 
-    if source == "usgs":
-        data = clean_earthquake_data(data)
-    else:
-        data = transform_esmc_data(data)
-    print('Data cleaned successfully')
+        load_data(data)
+        print('Data loaded successfully into database')
 
-    load_data(data)
-    print('Data loaded successfully into database')
+        print(
+            f"ETL pipeline run successfully in "
+            f'{os.getenv("ENV", "error")} environment!'
+        )
 
-    print(
-        f"ETL pipeline run successfully in "
-        f'{os.getenv("ENV", "error")} environment!'
-    )
+    except Exception as e:
+        print(f"Error during ETL for {source.upper()}: {e}")
 
 
 schedule.every(TIME_LENGTH).minutes.do(main)
